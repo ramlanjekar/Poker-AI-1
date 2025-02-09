@@ -47,6 +47,7 @@ NUM_BINS = 10
 
 def load_kmeans_classifiers():
     global kmeans_flop, kmeans_turn
+    '''Returns the valid pre-trained Kmaans model for flop and turn '''
 
     filename = sorted(get_filenames(f"../kmeans_data/kmeans/flop"))[-1]
     print("Loading KMeans Flop Classifier", filename)
@@ -56,7 +57,7 @@ def load_kmeans_classifiers():
     print("Loading KMeans Turn Classifier", filename)
     kmeans_turn = joblib.load(f"../kmeans_data/kmeans/turn/{filename}")
 
-    assert len(kmeans_flop.cluster_centers_) == NUM_FLOP_CLUSTERS
+    assert len(kmeans_flop.cluster_centers_) == NUM_FLOP_CLUSTERS #checks if the number of cluster center in the model = the one assigned by us
     assert len(kmeans_turn.cluster_centers_) == NUM_TURN_CLUSTERS
 
     return kmeans_flop, kmeans_turn
@@ -72,11 +73,12 @@ if USE_KMEANS:
         load_kmeans_classifiers()
     except Exception as e:
         print(e, "Couldn't load KMeans Classifiers. Generating new ones.")
-        clustering = True
+        clustering = True  # Trigger the process of generating new Kmeans models likely when the models are faulty
 
 
 def evaluate_winner(board, player_hand, opponent_hand):
-    p1_score = evaluate_cards(*(board + player_hand))
+    '''Return the winner among the two players'''
+    p1_score = evaluate_cards(*(board + player_hand)) # calculates a score for a hand
     p2_score = evaluate_cards(*(board + opponent_hand))
     if p1_score < p2_score:
         return 1
@@ -88,10 +90,14 @@ def evaluate_winner(board, player_hand, opponent_hand):
 
 # ----- Load the pre-generated dataset -----
 def load_dataset(batch=0):
+    '''Assigns the below global variable its values'''
+    
     global boards, player_hands, opponent_hands
     global player_flop_clusters, player_turn_clusters, player_river_clusters
     global opp_flop_clusters, opp_turn_clusters, opp_river_clusters
     global winners
+
+    #player_flop_clusters it is a list of cluster id for all the games for the flop part of the game similarly others
 
     # Load the pre-generated dataset
     boards = np.load(f"dataset/boards_{batch}.npy").tolist()
@@ -99,6 +105,7 @@ def load_dataset(batch=0):
     opponent_hands = np.load(f"dataset/opponent_hands_{batch}.npy").tolist()
 
     # Load player clusters
+    
     player_flop_clusters = np.load(f"dataset/player_flop_clusters_{batch}.npy").tolist()
     player_turn_clusters = np.load(f"dataset/player_turn_clusters_{batch}.npy").tolist()
     player_river_clusters = np.load(f"dataset/player_river_clusters_{batch}.npy").tolist()
@@ -110,6 +117,9 @@ def load_dataset(batch=0):
 
     winners = np.load(f"dataset/winners_{batch}.npy")
 
+    #Here now if the player_flop_clusters max does not contained the num_flop_clusters -1 it means it is trying to get the max value in the player_flop_clusters for the player 1 
+    #This means the dataset should be correct or the algorithm needs correction.
+    
     if max(player_flop_clusters) != NUM_FLOP_CLUSTERS - 1:
         raise ValueError(
             f"Expected {NUM_FLOP_CLUSTERS} clusters for player flop clusters, got {max(player_flop_clusters) + 1}"
@@ -140,6 +150,7 @@ def load_dataset(batch=0):
 def generate_dataset(num_samples=50000, batch=0, save=True):
     """
     To make things faster, we pre-generate the boards and hands. We also pre-cluster the hands
+    just generating the dataset which includes all the variables mentioned below
     """
     global boards, player_hands, opponent_hands
     global player_flop_clusters, player_turn_clusters, player_river_clusters
