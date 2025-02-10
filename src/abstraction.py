@@ -216,6 +216,7 @@ def generate_dataset(num_samples=50000, batch=0, save=True):
 # Preflop Abstraction with 169 buckets (lossless abstraction)
 def get_preflop_cluster_id(two_cards_string):  # Lossless abstraction for pre-flop, 169 clusters
     # cards input ex: Ak2h or ['Ak', '2h']
+    '''This function, get_preflop_cluster_id, categorizes a given pair of poker hole cards into one of 169 unique clusters based on hand strength. It does so by abstracting away the suits and focusing on rank and whether the cards are pocket pairs, suited, or unsuited.'''
     """
     For the Pre-flop, we can make a lossless abstraction with exactly 169 buckets. The idea here is that what specific suits
     our private cards are doesn't matter. The only thing that matters is whether both cards are suited or not.
@@ -258,6 +259,7 @@ def get_preflop_cluster_id(two_cards_string):  # Lossless abstraction for pre-fl
     cluster_id = 0
 
     def hash_(a, b):
+        '''Here the internmediate value is calculated '''
         """
         A2/2A -> 1
         A3/3A -> 2
@@ -296,14 +298,17 @@ def get_preflop_cluster_id(two_cards_string):  # Lossless abstraction for pre-fl
 
 
 def calculate_equity(player_cards: List[str], community_cards=[], n=2000, timer=False):
+    '''estimates the equity (i.e., probability of winning) of a given poker hand against a random opponent by simulating multiple games (Monte Carlo method). Let's break it down step by step.
+    and it retruns the expected hand strength
+'''
     if timer:
         start_time = time.time()
     wins = 0
-    deck = fast_evaluator.Deck(excluded_cards=player_cards + community_cards)
+    deck = fast_evaluator.Deck(excluded_cards=player_cards + community_cards) # excludes the community and players cards and create all the other cards
 
-    for _ in range(n):
+    for _ in range(n): # Here we are going to run n simulations
         random.shuffle(deck)
-        opponent_cards = deck[:2]  # To avoid creating redundant copies
+        opponent_cards = deck[:2]  # To avoid creating redundant copies and this is monte carlo simulations , that is playing untill we win 
         player_score = evaluate_cards(
             *(player_cards + community_cards + deck[2 : 2 + (5 - len(community_cards))])
         )
